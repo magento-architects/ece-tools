@@ -72,6 +72,7 @@ class Application extends \Symfony\Component\Console\Application
             $this->container->create(Command\CronKill::class),
             $this->container->create(Command\ConfigShow::class),
             $this->container->create(Command\RunCommand::class),
+            $this->container->create(Command\SplitDb::class),
         ]);
     }
 }

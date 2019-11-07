@@ -114,6 +114,16 @@ class MaintenanceModeSwitcher
         $this->logger->notice('Maintenance mode is disabled.');
     }
 
+
+    /**
+     * @return bool
+     * @throws GenericException
+     */
+    public function isEnabled(): bool
+    {
+        return $this->file->isExists($this->getMaintenanceFlagPath());
+    }
+
     /**
      * Returns path to maintenance flag file
      *

@@ -269,7 +269,7 @@ class Connection implements ConnectionInterface
     private function getTablePrefix(): string
     {
         if ($this->tablePrefix === null) {
-            $this->tablePrefix = $this->mergedConfig->get()['table_prefix'] ?? '';
+            $this->tablePrefix = $this->mergedConfig->get()['db']['table_prefix'] ?? '';
         }
 
         return $this->tablePrefix;
