@@ -210,7 +210,7 @@ class MergedConfig implements ConfigInterface
 
         $config = [];
         foreach ($connections as $connection) {
-            if (self::RESOURCE_MAP[$connection]) {
+            if (isset(self::RESOURCE_MAP[$connection])) {
                 $config[self::RESOURCE_MAP[$connection]][self::KEY_CONNECTION] = $connection;
             }
         }
