@@ -109,7 +109,7 @@ class DumpGenerator
 
         try {
             if (flock($lockFileHandle, LOCK_EX)) {
-                $this->logger->info("Start creation DB dump for $database ...");
+                $this->logger->info("Start creation DB dump for the database $database ...");
 
                 $command = 'timeout ' . self::DUMP_TIMEOUT . ' ' . $this->dump->getCommand($database);
                 if ($removeDefiners) {
@@ -123,7 +123,7 @@ class DumpGenerator
                     $this->logger->error('Error has occurred during mysqldump');
                     $this->shell->execute('rm ' . $dumpFile);
                 } else {
-                    $this->logger->info("Finished DB dump for $database, it can be found here: " . $dumpFile);
+                    $this->logger->info("Finished DB dump for database $database, it can be found here: " . $dumpFile);
                     fwrite(
                         $lockFileHandle,
                         sprintf('[%s] Dump was written in %s', date("Y-m-d H:i:s"), $dumpFile) . PHP_EOL

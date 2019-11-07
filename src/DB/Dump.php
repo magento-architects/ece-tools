@@ -34,9 +34,7 @@ class Dump implements DumpInterface
     /**
      * @param ConnectionFactory $connectionFactory
      */
-    public function __construct(
-        ConnectionFactory $connectionFactory
-    )
+    public function __construct(ConnectionFactory $connectionFactory)
     {
         $this->connectionFactory = $connectionFactory;
     }
@@ -46,7 +44,7 @@ class Dump implements DumpInterface
      *
      * {@inheritdoc}
      */
-    public function getCommand(string $database = self::DATABASE_MAIN): string
+    public function getCommand(string $database): string
     {
         $connectionData = $this->connectionFactory->create(self::DATABASE_MAP[$database]);
         $command = 'mysqldump -h ' . escapeshellarg($connectionData->getHost())

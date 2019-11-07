@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace Magento\MagentoCloud\Command;
 
+use Magento\MagentoCloud\DB\Dump;
 use Magento\MagentoCloud\DB\DumpGenerator;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
@@ -23,19 +24,9 @@ class DbDump extends Command
 {
     const NAME = 'db-dump';
 
-    const OPTION_REMOVE_DEFINERS = 'remove-definers';
-
     const ARGUMENT_DATABASES = 'databases';
 
-    const DATABASE_MAIN = 'main';
-    const DATABASE_CHECKOUT = 'checkout';
-    const DATABASE_SALES = 'sales';
-
-    const DATABASES = [
-        self::DATABASE_MAIN,
-        self::DATABASE_CHECKOUT,
-        self::DATABASE_SALES,
-    ];
+    const OPTION_REMOVE_DEFINERS = 'remove-definers';
 
     /**
      * @var LoggerInterface
@@ -64,13 +55,17 @@ class DbDump extends Command
      */
     protected function configure()
     {
+        $databases = array_keys(Dump::DATABASE_MAP);
         $this->setName(self::NAME)
             ->setDescription('Creates backup of database')
             ->addArgument(
                 self::ARGUMENT_DATABASES,
                 InputArgument::IS_ARRAY,
-                '',
-                self::DATABASES
+                sprintf(
+                    'Databases to backup. Available values: [%s]',
+                    implode(',', $databases)
+                ),
+                $databases
             )
             ->addOption(
                 self::OPTION_REMOVE_DEFINERS,
@@ -90,15 +85,33 @@ class DbDump extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $databases = $input->getArgument(self::ARGUMENT_DATABASES);
+        $breakExecution = false;
+        foreach ($databases as $database) {
+            if (!isset(Dump::DATABASE_MAP[$database])) {
+                $this->logger->error(sprintf(
+                        'Incorrect the argument value: %s. Available values: [%s]',
+                        $database,
+                        array_keys(Dump::DATABASE_MAP))
+                );
+                $breakExecution = true;
+            }
+        }
+
+        if ($breakExecution) {
+            return;
+        }
+
         $helper = $this->getHelper('question');
         $question = new ConfirmationQuestion(
             'We suggest to enable maintenance mode before running this command. Do you want to continue [y/N]?',
             false
         );
+
         if (!$helper->ask($input, $output, $question) && $input->isInteractive()) {
-            return null;
+            return;
         }
-        $databases = $input->getArgument(self::ARGUMENT_DATABASES);
+
         try {
             $this->logger->info('Starting backup.');
             foreach ($databases as $database) {

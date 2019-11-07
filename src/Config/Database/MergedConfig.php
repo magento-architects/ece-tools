@@ -263,17 +263,17 @@ class MergedConfig implements ConfigInterface
      * that doesn't match connection from relationships,
      * otherwise return false.
      *
-     * @param string $type
+     * @param string $connection
      * @return boolean
      */
-    public function isDbConfigCompatibleWithSlaveConnection(string $type): bool
+    public function isDbConfigCompatibleWithSlaveConnection(string $connection): bool
     {
         $config = $this->stageConfig->get(DeployInterface::VAR_DATABASE_CONFIGURATION);
-        $connectionData = $this->getConnectionData(self::CONNECTION_MAP[$type][self::KEY_CONNECTION]);
-        if ((isset($config[self::KEY_CONNECTION][$type]['host'])
-                && $config[self::KEY_CONNECTION][$type]['host'] !== $connectionData->getHost())
-            || (isset($config[self::KEY_CONNECTION][$type]['dbname'])
-                && $config[self::KEY_CONNECTION][$type]['dbname'] !== $connectionData->getDbName())
+        $connectionData = $this->getConnectionData(self::CONNECTION_MAP[$connection][self::KEY_CONNECTION]);
+        if ((isset($config[self::KEY_CONNECTION][$connection]['host'])
+                && $config[self::KEY_CONNECTION][$connection]['host'] !== $connectionData->getHost())
+            || (isset($config[self::KEY_CONNECTION][$connection]['dbname'])
+                && $config[self::KEY_CONNECTION][$connection]['dbname'] !== $connectionData->getDbName())
         ) {
             return false;
         }
@@ -300,7 +300,7 @@ class MergedConfig implements ConfigInterface
      */
     private function getConnectionData(string $key): ConnectionInterface
     {
-        if (null == $this->connectionData[$key]) {
+        if (!isset($this->connectionData[$key]) || !($this->connectionData[$key] instanceof ConnectionInterface)) {
             $this->connectionData[$key] = $this->connectionDataFactory->create($key);
         }
 

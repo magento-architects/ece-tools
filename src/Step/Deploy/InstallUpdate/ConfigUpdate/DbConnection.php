@@ -124,7 +124,7 @@ class DbConnection implements StepInterface
                 $this->logger->warning(
                     'You have changed db configuration that not compatible with default slave connection.'
                 );
-            } elseif (!empty($config['slave_connection'][$connection])) {
+            } elseif (!empty($config[MergedConfig::KEY_SLAVE_CONNECTION][$connection])) {
                 $this->logger->info('Set DB slave connection for `' . $connection . '` connection');
             } else {
                 $this->logger->info(

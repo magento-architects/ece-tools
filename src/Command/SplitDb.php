@@ -177,15 +177,21 @@ class SplitDb extends Command
             $envDbConfig = $this->getDatabaseConfig();
 
             $breakExecution = false;
+
             foreach ($types as $type) {
+                if (!isset(self::TYPE_MAP[$type])) {
+                    $this->logger->error('Incorrect the argument type value: ' . $type);
+                    $breakExecution = true;
+                    continue;
+                }
                 $connectionName = self::TYPE_MAP[$type][DbConfig::KEY_CONNECTION];
                 if (isset($configFormEnvFile[DbConfig::KEY_DB][DbConfig::KEY_CONNECTION][$connectionName])) {
-                    $output->writeln(sprintf('Database for %s has been split.', $type));
+                    $this->logger->notice(sprintf('Database for %s has been split.', $type));
                     $breakExecution = true;
                     continue;
                 }
                 if (!isset($envDbConfig[DbConfig::KEY_CONNECTION][$connectionName])) {
-                    $output->writeln(sprintf('ERROR: there is not connections to additional DBs for %s splitting.', $type));
+                    $this->logger->error(sprintf('There is not connections to additional DBs for %s splitting.', $type));
                     $breakExecution = true;
                 }
             }
@@ -219,13 +225,19 @@ class SplitDb extends Command
                     $splitDbConfig['password']
                 );
                 $outputCmd = $this->magentoShell->execute($cmd)->getOutput();
-                $output->writeln('CMD output: ' . $outputCmd);
-                $output->writeln(sprintf('Quote tables were split to DB %s in %s', $splitDbConfig['dbname'], $splitDbConfig['host']));
+                $this->logger->debug($outputCmd);
+                $this->logger->info(sprintf(
+                    'Quote tables were split to DB %s in %s',
+                    $splitDbConfig['dbname'],
+                    $splitDbConfig['host']
+                ));
 
                 if ($useSlave) {
                     $splitDbConfigSlave = $envDbConfig[DbConfig::KEY_SLAVE_CONNECTION][$connectionName];
                     $resourceName = self::TYPE_MAP[$type][DbConfig::KEY_RESOURCE];
-                    $cmd = sprintf('setup:db-schema:add-slave --host="%s" --dbname="%s" --username="%s" --password="%s" --connection="%s" --resource=%s',
+                    $cmd = sprintf(
+                        'setup:db-schema:add-slave --host="%s" --dbname="%s" --username="%s" --password="%s"'
+                        . '--connection="%s" --resource="%s"',
                         $splitDbConfigSlave['host'],
                         $splitDbConfigSlave['dbname'],
                         $splitDbConfigSlave['username'],
@@ -234,7 +246,7 @@ class SplitDb extends Command
                         $resourceName
                     );
                     $outputCmd = $this->magentoShell->execute($cmd)->getOutput();
-                    $output->writeln('CMD output: ' . $outputCmd);
+                    $this->logger->debug($outputCmd);
                 }
             }
         } catch (\Exception $exception) {

@@ -14,8 +14,8 @@ interface DumpInterface
 {
     /**
      * Returns DB dump command with necessary connection data and options.
-     *
+     * @param string $database
      * @return string
      */
-    public function getCommand(): string;
+    public function getCommand(string $database): string;
 }
