@@ -39,7 +39,6 @@ class MergedConfig implements ConfigInterface
         ],
         self::CONNECTION_INDEXER => [
             self::KEY_CONNECTION => RelationshipConnectionFactory::CONNECTION_MAIN,
-            self::KEY_SLAVE_CONNECTION => RelationshipConnectionFactory::CONNECTION_SLAVE,
         ],
         self::CONNECTION_CHECKOUT => [
             self::KEY_CONNECTION => RelationshipConnectionFactory::CONNECTION_QUOTE_MAIN,
@@ -119,8 +118,7 @@ class MergedConfig implements ConfigInterface
         ConfigMerger $configMerger,
         DeployInterface $stageConfig,
         RelationshipConnectionFactory $connectionDataFactory
-    )
-    {
+    ) {
         $this->connectionDataFactory = $connectionDataFactory;
         $this->configReader = $configReader;
         $this->stageConfig = $stageConfig;
@@ -177,7 +175,7 @@ class MergedConfig implements ConfigInterface
                 continue;
             }
             $config[self::KEY_CONNECTION][$connName] = $this->getConnectionConfig($connData);
-            if (!$useSlave) {
+            if (!$useSlave || !isset($connConfig[self::KEY_SLAVE_CONNECTION])) {
                 continue;
             }
             $connData = $this->getConnectionData($connConfig[self::KEY_SLAVE_CONNECTION]);
@@ -244,8 +242,7 @@ class MergedConfig implements ConfigInterface
         ConnectionInterface $connectionData,
         string $type,
         array $dbConfig
-    ): bool
-    {
+    ): bool {
         $envConfig = $this->getDbConfigFromEnvFile();
         return !empty($connectionData->getHost())
             && $this->isDbConfigCompatibleWithSlaveConnection($type)

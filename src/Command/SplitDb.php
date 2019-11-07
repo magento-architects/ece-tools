@@ -131,8 +131,7 @@ class SplitDb extends Command
         ConfigReader $configReader,
         MaintenanceModeSwitcher $maintenanceModeSwitcher,
         MagentoShell $magentoShell
-    )
-    {
+    ) {
         $this->logger = $logger;
         $this->dbConfig = $dbConfig;
         $this->stageConfig = $stageConfig;
@@ -191,13 +190,16 @@ class SplitDb extends Command
                     continue;
                 }
                 if (!isset($envDbConfig[DbConfig::KEY_CONNECTION][$connectionName])) {
-                    $this->logger->error(sprintf('There is not connections to additional DBs for %s splitting.', $type));
+                    $this->logger->error(sprintf(
+                        'There is not connections to additional DBs for %s splitting.',
+                        $type
+                    ));
                     $breakExecution = true;
                 }
             }
 
             if ($breakExecution) {
-                return;
+                return null;
             }
 
             if (!$this->maintenanceMode->isEnabled()) {
@@ -209,7 +211,7 @@ class SplitDb extends Command
                     false
                 );
                 if (!$helper->ask($input, $output, $question) && $input->isInteractive()) {
-                    return;
+                    return null;
                 }
             }
             $useSlave = $this->stageConfig->get(DeployInterface::VAR_MYSQL_USE_SLAVE_CONNECTION);
@@ -237,7 +239,7 @@ class SplitDb extends Command
                     $resourceName = self::TYPE_MAP[$type][DbConfig::KEY_RESOURCE];
                     $cmd = sprintf(
                         'setup:db-schema:add-slave --host="%s" --dbname="%s" --username="%s" --password="%s"'
-                        . '--connection="%s" --resource="%s"',
+                        . ' --connection="%s" --resource="%s"',
                         $splitDbConfigSlave['host'],
                         $splitDbConfigSlave['dbname'],
                         $splitDbConfigSlave['username'],
@@ -249,6 +251,7 @@ class SplitDb extends Command
                     $this->logger->debug($outputCmd);
                 }
             }
+            return null;
         } catch (\Exception $exception) {
             $this->logger->critical($exception->getMessage());
             throw $exception;

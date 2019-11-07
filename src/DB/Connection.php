@@ -57,8 +57,7 @@ class Connection implements ConnectionInterface
         LoggerInterface $logger,
         ConnectionFactory $connectionFactory,
         MergedConfig $mergedConfig
-    )
-    {
+    ) {
         $this->logger = $logger;
         $this->connectionFactory = $connectionFactory;
         $this->mergedConfig = $mergedConfig;
@@ -71,8 +70,7 @@ class Connection implements ConnectionInterface
         string $query,
         array $bindings = [],
         string $connection = ConnectionFactory::CONNECTION_MAIN
-    ): bool
-    {
+    ): bool {
         return $this->run($query, $bindings, $connection, function ($query, $bindings, $connection) {
             $statement = $this->getPdo($connection)->prepare($query);
 
@@ -93,8 +91,7 @@ class Connection implements ConnectionInterface
         string $query,
         array $bindings = [],
         string $connection = ConnectionFactory::CONNECTION_MAIN
-    ): int
-    {
+    ): int {
         return $this->run($query, $bindings, $connection, function ($query, $bindings, $connection) {
             $statement = $this->getPdo($connection)->prepare($query);
 
@@ -113,8 +110,7 @@ class Connection implements ConnectionInterface
         string $query,
         array $bindings = [],
         string $connection = ConnectionFactory::CONNECTION_MAIN
-    ): array
-    {
+    ): array {
         return $this->getFetchStatement($query, $bindings, $connection)->fetchAll();
     }
 
@@ -125,13 +121,12 @@ class Connection implements ConnectionInterface
         string $query,
         array $bindings = [],
         string $connection = ConnectionFactory::CONNECTION_MAIN
-    ): array
-    {
+    ): array {
         $result = $this->getFetchStatement($query, $bindings, $connection)->fetch(\PDO::FETCH_ASSOC);
 
         if ($result === false) {
-            $message = 'Failed to execute query: ' . var_export($this->getPdo($connection)->errorInfo());
-            $this->logger->error($message, true);
+            $message = 'Failed to execute query: ' . var_export($this->getPdo($connection)->errorInfo(), true);
+            $this->logger->error($message);
 
             $result = [];
         }
@@ -151,8 +146,7 @@ class Connection implements ConnectionInterface
         string $query,
         array $bindings = [],
         string $connection = ConnectionFactory::CONNECTION_MAIN
-    ): \PDOStatement
-    {
+    ): \PDOStatement {
         return $this->run($query, $bindings, $connection, function ($query, $bindings, $connection) {
             $statement = $this->getPdo($connection)->prepare($query);
 
@@ -217,7 +211,7 @@ class Connection implements ConnectionInterface
             }
 
             $this->logger->notice('Lost connection to Mysql server. Reconnecting.');
-            $this->pdo[$connection] = null;
+            unset($this->pdo[$connection]);
             $this->connect($connection);
         }
 
@@ -278,7 +272,7 @@ class Connection implements ConnectionInterface
      */
     public function close(string $connection = ConnectionFactory::CONNECTION_MAIN)
     {
-        $this->pdo[$connection] = null;
+        unset($this->pdo[$connection]);
     }
 
     /**

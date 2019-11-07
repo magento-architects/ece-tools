@@ -114,7 +114,6 @@ class MaintenanceModeSwitcher
         $this->logger->notice('Maintenance mode is disabled.');
     }
 
-
     /**
      * @return bool
      * @throws GenericException

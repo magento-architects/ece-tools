@@ -78,8 +78,7 @@ class InstallCommandFactory
         DeployInterface $stageConfig,
         ElasticSuite $elasticSuite,
         MergedConfig $mergedConfig
-    )
-    {
+    ) {
         $this->urlManager = $urlManager;
         $this->environment = $environment;
         $this->connectionFactory = $connectionFactory;

@@ -73,8 +73,7 @@ class DbConnection implements StepInterface
         ConfigMerger $configMerger,
         RelationshipConnectionFactory $connectionFactory,
         LoggerInterface $logger
-    )
-    {
+    ) {
         $this->stageConfig = $stageConfig;
         $this->mergedConfig = $mergedConfig;
         $this->configWriter = $configWriter;

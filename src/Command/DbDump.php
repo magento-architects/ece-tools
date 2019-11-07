@@ -90,16 +90,16 @@ class DbDump extends Command
         foreach ($databases as $database) {
             if (!isset(Dump::DATABASE_MAP[$database])) {
                 $this->logger->error(sprintf(
-                        'Incorrect the argument value: %s. Available values: [%s]',
-                        $database,
-                        array_keys(Dump::DATABASE_MAP))
-                );
+                    'Incorrect the argument value: %s. Available values: [%s]',
+                    $database,
+                    implode(',', array_keys(Dump::DATABASE_MAP))
+                ));
                 $breakExecution = true;
             }
         }
 
         if ($breakExecution) {
-            return;
+            return null;
         }
 
         $helper = $this->getHelper('question');
@@ -109,7 +109,7 @@ class DbDump extends Command
         );
 
         if (!$helper->ask($input, $output, $question) && $input->isInteractive()) {
-            return;
+            return null;
         }
 
         try {
@@ -121,9 +121,9 @@ class DbDump extends Command
                 );
             }
             $this->logger->info('Backup completed.');
+            return null;
         } catch (\Exception $exception) {
             $this->logger->critical($exception->getMessage());
-
             throw $exception;
         }
     }

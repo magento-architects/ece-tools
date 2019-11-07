@@ -65,8 +65,7 @@ class DumpGenerator
         LoggerInterface $logger,
         ShellInterface $shell,
         DirectoryList $directoryList
-    )
-    {
+    ) {
         $this->dump = $dump;
         $this->logger = $logger;
         $this->shell = $shell;
