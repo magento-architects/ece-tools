@@ -131,7 +131,8 @@ class SplitDb extends Command
         ConfigReader $configReader,
         MaintenanceModeSwitcher $maintenanceModeSwitcher,
         MagentoShell $magentoShell
-    ) {
+    )
+    {
         $this->logger = $logger;
         $this->dbConfig = $dbConfig;
         $this->stageConfig = $stageConfig;
@@ -172,18 +173,18 @@ class SplitDb extends Command
     {
         try {
             $types = $input->getArgument(self::ARGUMENT_TYPES);
-            $configFormEnvFile = $this->configReader->read() ?? [];
+            $configFormEnvFile = $this->configReader->read();
             $envDbConfig = $this->getDatabaseConfig();
 
             $breakExecution = false;
             foreach ($types as $type) {
                 $connectionName = self::TYPE_MAP[$type][DbConfig::KEY_CONNECTION];
-                if (isset($configFormEnvFile['db']['connection'][$connectionName])) {
+                if (isset($configFormEnvFile[DbConfig::KEY_DB][DbConfig::KEY_CONNECTION][$connectionName])) {
                     $output->writeln(sprintf('Database for %s has been split.', $type));
                     $breakExecution = true;
                     continue;
                 }
-                if (!isset($envDbConfig['connection'][$connectionName])) {
+                if (!isset($envDbConfig[DbConfig::KEY_CONNECTION][$connectionName])) {
                     $output->writeln(sprintf('ERROR: there is not connections to additional DBs for %s splitting.', $type));
                     $breakExecution = true;
                 }
@@ -208,7 +209,7 @@ class SplitDb extends Command
             $useSlave = $this->stageConfig->get(DeployInterface::VAR_MYSQL_USE_SLAVE_CONNECTION);
             foreach ($types as $type) {
                 $connectionName = self::TYPE_MAP[$type][DbConfig::KEY_CONNECTION];
-                $splitDbConfig = $envDbConfig['connection'][$connectionName];
+                $splitDbConfig = $envDbConfig[DbConfig::KEY_CONNECTION][$connectionName];
                 $cmd = sprintf(
                     'setup:db-schema:split-%s --host="%s" --dbname="%s" --username="%s" --password="%s"',
                     $type,
@@ -222,7 +223,7 @@ class SplitDb extends Command
                 $output->writeln(sprintf('Quote tables were split to DB %s in %s', $splitDbConfig['dbname'], $splitDbConfig['host']));
 
                 if ($useSlave) {
-                    $splitDbConfigSlave = $envDbConfig['slave_connection'][$connectionName];
+                    $splitDbConfigSlave = $envDbConfig[DbConfig::KEY_SLAVE_CONNECTION][$connectionName];
                     $resourceName = self::TYPE_MAP[$type][DbConfig::KEY_RESOURCE];
                     $cmd = sprintf('setup:db-schema:add-slave --host="%s" --dbname="%s" --username="%s" --password="%s" --connection="%s" --resource=%s',
                         $splitDbConfigSlave['host'],

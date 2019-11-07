@@ -46,8 +46,9 @@ class ResourceConfiguration implements ValidatorInterface
     public function validate(): Validator\ResultInterface
     {
         $wrongResources = [];
-        foreach ($this->mergedConfig->get()['resource'] as $resourceName => $resourceData) {
-            if (!isset($resourceData['connection'])) {
+        $resources = $this->mergedConfig->get()[MergedConfig::KEY_RESOURCE];
+        foreach ($resources as $resourceName => $resourceData) {
+            if (!isset($resourceData[MergedConfig::KEY_CONNECTION])) {
                 $wrongResources[] = $resourceName;
             }
         }

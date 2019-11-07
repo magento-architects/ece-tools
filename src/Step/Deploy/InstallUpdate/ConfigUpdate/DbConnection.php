@@ -95,10 +95,10 @@ class DbConnection implements StepInterface
 
         $this->logger->info('Updating env.php DB connection configuration.');
         $dbConfig = $this->mergedConfig->get();
-        $config['db'] = $dbConfig['db'];
-        $config['resource'] = $dbConfig['resource'];
+        $config[MergedConfig::KEY_DB] = $dbConfig[MergedConfig::KEY_DB];
+        $config[MergedConfig::KEY_RESOURCE] = $dbConfig[MergedConfig::KEY_RESOURCE];
 
-        $this->addLoggingAboutSlaveConnection($config['db']);
+        $this->addLoggingAboutSlaveConnection($config[MergedConfig::KEY_DB]);
         $this->configWriter->create($config);
     }
 
@@ -114,7 +114,7 @@ class DbConnection implements StepInterface
         $isMergeRequired = !$this->configMerger->isEmpty($envDbConfig)
             && !$this->configMerger->isMergeRequired($envDbConfig);
 
-        $connections = array_keys($config['connection']);
+        $connections = array_keys($config[MergedConfig::KEY_CONNECTION]);
         foreach ($connections as $connection) {
             $connectionType = MergedConfig::CONNECTION_MAP[$connection][MergedConfig::KEY_CONNECTION];
             $connectionData = $this->connectionFactory->create($connectionType);

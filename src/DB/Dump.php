@@ -14,6 +14,16 @@ use Magento\MagentoCloud\DB\Data\ConnectionFactory;
  */
 class Dump implements DumpInterface
 {
+    const DATABASE_MAIN = 'main';
+    const DATABASE_CHECKOUT = 'checkout';
+    const DATABASE_SALES = 'sales';
+
+    const DATABASE_MAP = [
+        self::DATABASE_MAIN => ConnectionFactory::CONNECTION_SLAVE,
+        self::DATABASE_CHECKOUT => ConnectionFactory::CONNECTION_QUOTE_SLAVE,
+        self::DATABASE_SALES => ConnectionFactory::CONNECTION_SALES_SLAVE,
+    ];
+
     /**
      * Factory for creation database data connection classes
      *
@@ -26,7 +36,8 @@ class Dump implements DumpInterface
      */
     public function __construct(
         ConnectionFactory $connectionFactory
-    ) {
+    )
+    {
         $this->connectionFactory = $connectionFactory;
     }
 
@@ -35,9 +46,9 @@ class Dump implements DumpInterface
      *
      * {@inheritdoc}
      */
-    public function getCommand(): string
+    public function getCommand(string $database = self::DATABASE_MAIN): string
     {
-        $connectionData = $this->connectionFactory->create(ConnectionFactory::CONNECTION_SLAVE);
+        $connectionData = $this->connectionFactory->create(self::DATABASE_MAP[$database]);
         $command = 'mysqldump -h ' . escapeshellarg($connectionData->getHost())
             . ' -u ' . escapeshellarg($connectionData->getUser());
 

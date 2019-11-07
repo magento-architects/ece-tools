@@ -14,9 +14,6 @@ use Magento\MagentoCloud\Service\Database;
  */
 class RelationshipConnectionFactory implements ConnectionFactoryInterface
 {
-    const CONNECTION_MAIN = 'main';
-    const CONNECTION_SLAVE = 'slave';
-
     /**
      * @var Database
      */

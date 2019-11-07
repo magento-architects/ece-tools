@@ -65,7 +65,8 @@ class DumpGenerator
         LoggerInterface $logger,
         ShellInterface $shell,
         DirectoryList $directoryList
-    ) {
+    )
+    {
         $this->dump = $dump;
         $this->logger = $logger;
         $this->shell = $shell;
@@ -80,13 +81,14 @@ class DumpGenerator
      * as well as serves a log with the name of created dump file.
      * If any error happened during dumping, dump file is removed.
      *
+     * @param string $database
      * @param bool $removeDefiners
      * @return void
      * @throws \Magento\MagentoCloud\Package\UndefinedPackageException
      */
-    public function create(bool $removeDefiners)
+    public function create(string $database, bool $removeDefiners)
     {
-        $dumpFileName = sprintf(self::DUMP_FILE_NAME_TEMPLATE, time());
+        $dumpFileName = sprintf(self::DUMP_FILE_NAME_TEMPLATE . '_' . $database, time());
 
         $temporaryDirectory = sys_get_temp_dir();
 
@@ -107,9 +109,9 @@ class DumpGenerator
 
         try {
             if (flock($lockFileHandle, LOCK_EX)) {
-                $this->logger->info('Start creation DB dump...');
+                $this->logger->info("Start creation DB dump for $database ...");
 
-                $command = 'timeout ' . self::DUMP_TIMEOUT . ' ' . $this->dump->getCommand();
+                $command = 'timeout ' . self::DUMP_TIMEOUT . ' ' . $this->dump->getCommand($database);
                 if ($removeDefiners) {
                     $command .= ' | sed -e \'s/DEFINER[ ]*=[ ]*[^*]*\*/\*/\'';
                 }
@@ -121,7 +123,7 @@ class DumpGenerator
                     $this->logger->error('Error has occurred during mysqldump');
                     $this->shell->execute('rm ' . $dumpFile);
                 } else {
-                    $this->logger->info('Finished DB dump, it can be found here: ' . $dumpFile);
+                    $this->logger->info("Finished DB dump for $database, it can be found here: " . $dumpFile);
                     fwrite(
                         $lockFileHandle,
                         sprintf('[%s] Dump was written in %s', date("Y-m-d H:i:s"), $dumpFile) . PHP_EOL

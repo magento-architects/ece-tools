@@ -76,7 +76,7 @@ class ConnectionFactory implements ConnectionFactoryInterface
     private function getDbConfig(): array
     {
         if (null === $this->dbConfig) {
-            $this->dbConfig = $this->mergedConfig->get()['db'];
+            $this->dbConfig = $this->mergedConfig->get()[MergedConfig::KEY_DB];
         }
         return $this->dbConfig;
     }
