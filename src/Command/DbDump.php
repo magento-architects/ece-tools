@@ -7,8 +7,7 @@ declare(strict_types=1);
 
 namespace Magento\MagentoCloud\Command;
 
-use Magento\MagentoCloud\DB\Dump;
-use Magento\MagentoCloud\DB\DumpGenerator;
+use Magento\MagentoCloud\DB\DumpCreator;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -34,17 +33,17 @@ class DbDump extends Command
     private $logger;
 
     /**
-     * @var DumpGenerator
+     * @var DumpCreator
      */
-    private $dumpGenerator;
+    private $dumpCreator;
 
     /**
-     * @param DumpGenerator $dumpGenerator
+     * @param DumpCreator $dumpCreator
      * @param LoggerInterface $logger
      */
-    public function __construct(DumpGenerator $dumpGenerator, LoggerInterface $logger)
+    public function __construct(DumpCreator $dumpCreator, LoggerInterface $logger)
     {
-        $this->dumpGenerator = $dumpGenerator;
+        $this->dumpCreator = $dumpCreator;
         $this->logger = $logger;
 
         parent::__construct();
@@ -55,17 +54,17 @@ class DbDump extends Command
      */
     protected function configure()
     {
-        $databases = array_keys(Dump::DATABASE_MAP);
         $this->setName(self::NAME)
             ->setDescription('Creates backup of database')
             ->addArgument(
                 self::ARGUMENT_DATABASES,
                 InputArgument::IS_ARRAY,
                 sprintf(
-                    'Databases to backup. Available values: [%s]',
-                    implode(',', $databases)
+                    'Databases to backup. Available values: %s or empty. By default will backup the databases'
+                    . ' based on the databases configuration in the file <magento_root>/app/etc/env.php ',
+                    implode(',', array_keys(DumpCreator::DATABASE_MAP))
                 ),
-                $databases
+                []
             )
             ->addOption(
                 self::OPTION_REMOVE_DEFINERS,
@@ -85,23 +84,6 @@ class DbDump extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $databases = $input->getArgument(self::ARGUMENT_DATABASES);
-        $breakExecution = false;
-        foreach ($databases as $database) {
-            if (!isset(Dump::DATABASE_MAP[$database])) {
-                $this->logger->error(sprintf(
-                    'Incorrect the argument value: %s. Available values: [%s]',
-                    $database,
-                    implode(',', array_keys(Dump::DATABASE_MAP))
-                ));
-                $breakExecution = true;
-            }
-        }
-
-        if ($breakExecution) {
-            return null;
-        }
-
         $helper = $this->getHelper('question');
         $question = new ConfirmationQuestion(
             'We suggest to enable maintenance mode before running this command. Do you want to continue [y/N]?',
@@ -112,14 +94,29 @@ class DbDump extends Command
             return null;
         }
 
+        $databases = $input->getArgument(self::ARGUMENT_DATABASES);
+        $breakExecution = false;
+        foreach ($databases as $database) {
+            if (!isset(DumpCreator::DATABASE_MAP[$database])) {
+                $this->logger->error(sprintf(
+                    'Incorrect the argument value: %s. Available values: %s or empty',
+                    $database,
+                    implode(',', array_keys(DumpCreator::DATABASE_MAP))
+                ));
+                $breakExecution = true;
+            }
+        }
+
+        if ($breakExecution) {
+            return null;
+        }
+
         try {
             $this->logger->info('Starting backup.');
-            foreach ($databases as $database) {
-                $this->dumpGenerator->create(
-                    $database,
-                    (bool)$input->getOption(self::OPTION_REMOVE_DEFINERS)
-                );
-            }
+            $this->dumpCreator->process(
+                $databases,
+                (bool)$input->getOption(self::OPTION_REMOVE_DEFINERS)
+            );
             $this->logger->info('Backup completed.');
             return null;
         } catch (\Exception $exception) {

@@ -10,16 +10,46 @@ namespace Magento\MagentoCloud\DB;
 use Magento\MagentoCloud\Filesystem\DirectoryList;
 use Magento\MagentoCloud\Shell\ShellInterface;
 use Psr\Log\LoggerInterface;
+use Magento\MagentoCloud\DB\Data\ConnectionFactory;
+use Magento\MagentoCloud\DB\Data\ConnectionInterface;
+use Magento\MagentoCloud\Config\Deploy\Reader as ConfigReader;
 
 /**
  * Creates database dump and archives it
  */
-class DumpGenerator
+class DumpCreator
 {
+    const DATABASE_MAIN = 'main';
+    const DATABASE_CHECKOUT = 'checkout';
+    const DATABASE_SALES = 'sales';
+
+    const CONNECTION_DEFAULT = 'default';
+    const CONNECTION_CHECKOUT = 'checkout';
+    const CONNECTION_SALES = 'sales';
+
+    const DATABASE_MAP = [
+        self::DATABASE_MAIN => ConnectionFactory::CONNECTION_SLAVE,
+        self::DATABASE_CHECKOUT => ConnectionFactory::CONNECTION_QUOTE_SLAVE,
+        self::DATABASE_SALES => ConnectionFactory::CONNECTION_SALES_SLAVE,
+    ];
+
+    const CONNECTION_MAP = [
+        self::CONNECTION_DEFAULT => ConnectionFactory::CONNECTION_SLAVE,
+        self::CONNECTION_CHECKOUT => ConnectionFactory::CONNECTION_QUOTE_SLAVE,
+        self::CONNECTION_SALES => ConnectionFactory::CONNECTION_SALES_SLAVE,
+    ];
+
+    /**
+     * Factory for creation database data connection classes
+     *
+     * @var ConnectionFactory
+     */
+    private $connectionFactory;
+
     /**
      * Template for dump file name where %s should be changed to timestamp for uniqueness
      */
-    const DUMP_FILE_NAME_TEMPLATE = 'dump-%s.sql.gz';
+    const DUMP_FILE_NAME_TEMPLATE = 'dump-%s-%s.sql.gz';
 
     /**
      * Lock file name.
@@ -55,21 +85,54 @@ class DumpGenerator
     private $dump;
 
     /**
+     * @var ConfigReader
+     */
+    private $configReader;
+
+    /**
      * @param DumpInterface $dump
      * @param LoggerInterface $logger
      * @param ShellInterface $shell
      * @param DirectoryList $directoryList
+     * @param ConnectionFactory $connectionFactory
+     * @param ConfigReader $configReader
      */
     public function __construct(
         DumpInterface $dump,
         LoggerInterface $logger,
         ShellInterface $shell,
-        DirectoryList $directoryList
+        DirectoryList $directoryList,
+        ConnectionFactory $connectionFactory,
+        ConfigReader $configReader
     ) {
         $this->dump = $dump;
         $this->logger = $logger;
         $this->shell = $shell;
         $this->directoryList = $directoryList;
+        $this->connectionFactory = $connectionFactory;
+        $this->configReader = $configReader;
+    }
+
+    /**
+     * The process to create dumps of databases
+     *
+     * @param array $databases
+     * @param bool $removeDefiners
+     * @throws \Magento\MagentoCloud\Package\UndefinedPackageException
+     */
+    public function process(array $databases, bool $removeDefiners)
+    {
+        if (empty($databases)) {
+            $connections = array_intersect_key(
+                self::CONNECTION_MAP,
+                $this->configReader->read()['db']['connection'] ?? []
+            );
+            foreach ($connections as $connection) {
+                $database = array_flip(self::DATABASE_MAP)[$connection];
+                $connectionData = $this->connectionFactory->create($connection);
+                $this->create($database, $connectionData, $removeDefiners);
+            }
+        }
     }
 
     /**
@@ -81,13 +144,15 @@ class DumpGenerator
      * If any error happened during dumping, dump file is removed.
      *
      * @param string $database
+     * @param ConnectionInterface $connectionData
      * @param bool $removeDefiners
      * @return void
      * @throws \Magento\MagentoCloud\Package\UndefinedPackageException
      */
-    public function create(string $database, bool $removeDefiners)
+    private function create(string $database, ConnectionInterface $connectionData, bool $removeDefiners)
     {
-        $dumpFileName = sprintf(self::DUMP_FILE_NAME_TEMPLATE . '_' . $database, time());
+
+        $dumpFileName = sprintf(self::DUMP_FILE_NAME_TEMPLATE, $database, time());
 
         $temporaryDirectory = sys_get_temp_dir();
 
@@ -108,9 +173,9 @@ class DumpGenerator
 
         try {
             if (flock($lockFileHandle, LOCK_EX)) {
-                $this->logger->info("Start creation DB dump for the database $database ...");
+                $this->logger->info("Start creation DB dump for the $database database ...");
 
-                $command = 'timeout ' . self::DUMP_TIMEOUT . ' ' . $this->dump->getCommand($database);
+                $command = 'timeout ' . self::DUMP_TIMEOUT . ' ' . $this->dump->getCommand($connectionData);
                 if ($removeDefiners) {
                     $command .= ' | sed -e \'s/DEFINER[ ]*=[ ]*[^*]*\*/\*/\'';
                 }
@@ -122,7 +187,7 @@ class DumpGenerator
                     $this->logger->error('Error has occurred during mysqldump');
                     $this->shell->execute('rm ' . $dumpFile);
                 } else {
-                    $this->logger->info("Finished DB dump for database $database, it can be found here: " . $dumpFile);
+                    $this->logger->info("Finished DB dump for $database database, it can be found here: " . $dumpFile);
                     fwrite(
                         $lockFileHandle,
                         sprintf('[%s] Dump was written in %s', date("Y-m-d H:i:s"), $dumpFile) . PHP_EOL
