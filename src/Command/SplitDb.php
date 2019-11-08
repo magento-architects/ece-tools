@@ -184,7 +184,7 @@ class SplitDb extends Command
                     continue;
                 }
                 $connectionName = self::TYPE_MAP[$type][DbConfig::KEY_CONNECTION];
-                if (isset($configFormEnvFile[DbConfig::KEY_DB][DbConfig::KEY_CONNECTION][$connectionName])) {
+                if (isset($configFormEnvFile['db']['connection'][$connectionName])) {
                     $this->logger->notice(sprintf('Database for %s has been split.', $type));
                     $breakExecution = true;
                     continue;
