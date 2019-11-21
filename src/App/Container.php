@@ -325,6 +325,7 @@ class Container implements ContainerInterface
                         $this->container->make(DeployProcess\InstallUpdate\ConfigUpdate\CronConsumersRunner::class),
                         $this->container->make(DeployProcess\InstallUpdate\ConfigUpdate\DbConnection::class),
                         $this->container->make(DeployProcess\InstallUpdate\ConfigUpdate\Amqp::class),
+                        $this->container->make(DeployProcess\InstallUpdate\ConfigUpdate\Storage::class),
                         $this->container->make(DeployProcess\InstallUpdate\ConfigUpdate\Session::class),
                         $this->container->make(DeployProcess\InstallUpdate\ConfigUpdate\SearchEngine::class),
                         $this->container->make(DeployProcess\InstallUpdate\ConfigUpdate\Urls::class),

@@ -1,14 +1,13 @@
 <?php
 
-namespace Magento\MagentoCloud\Step\Deploy\InstallUpdate\ConfigUpdate;
+namespace Magento\MagentoCloud\Process\Deploy\InstallUpdate\ConfigUpdate;
 
 use Magento\MagentoCloud\Config\Deploy\Reader as ConfigReader;
 use Magento\MagentoCloud\Config\Deploy\Writer as ConfigWriter;
-use Magento\MagentoCloud\Step\Deploy\InstallUpdate\ConfigUpdate\Storage\Config as StorageConfig;
-use Magento\MagentoCloud\Step\StepException;
-use Magento\MagentoCloud\Step\StepInterface;
+use Magento\MagentoCloud\Process\Deploy\InstallUpdate\ConfigUpdate\Storage\Config;
+use Magento\MagentoCloud\Process\ProcessInterface;
 
-class Storage implements StepInterface
+class Storage implements ProcessInterface
 {
     /**
      * @var ConfigReader
@@ -23,7 +22,7 @@ class Storage implements StepInterface
      */
     private $logger;
     /**
-     * @var StorageConfig
+     * @var Config
      */
     private $storageConfig;
 
@@ -34,7 +33,7 @@ class Storage implements StepInterface
         ConfigReader $configReader,
         ConfigWriter $configWriter,
         LoggerInterface $logger,
-        StorageConfig $storageConfig
+        Config $storageConfig
     )
     {
         $this->configReader = $configReader;
@@ -48,7 +47,6 @@ class Storage implements StepInterface
      * Executes the step.
      *
      * @return void
-     * @throws StepException
      */
     public function execute()
     {

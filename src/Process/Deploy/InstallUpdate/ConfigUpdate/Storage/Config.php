@@ -1,6 +1,6 @@
 <?php
 
-namespace Magento\MagentoCloud\Step\Deploy\InstallUpdate\ConfigUpdate\Storage;
+namespace Magento\MagentoCloud\Process\Deploy\InstallUpdate\ConfigUpdate\Storage;
 
 use Magento\MagentoCloud\Config\Stage\DeployInterface;
 
