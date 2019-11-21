@@ -6,6 +6,7 @@ use Magento\MagentoCloud\Config\Deploy\Reader as ConfigReader;
 use Magento\MagentoCloud\Config\Deploy\Writer as ConfigWriter;
 use Magento\MagentoCloud\Process\Deploy\InstallUpdate\ConfigUpdate\Storage\Config;
 use Magento\MagentoCloud\Process\ProcessInterface;
+use Psr\Log\LoggerInterface;
 
 class Storage implements ProcessInterface
 {
