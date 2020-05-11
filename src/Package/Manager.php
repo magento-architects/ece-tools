@@ -33,7 +33,11 @@ class Manager
         Composer $composer
     ) {
         $this->composer = $composer;
-        $this->repository = $composer->getLocker()->getLockedRepository();
+        $locker = $composer->getLocker();
+        $lockFile = new \ReflectionProperty(\Composer\Package\Locker::class, 'lockFile');
+        $lockFileValue = $lockFile->getValue($locker);
+        echo "Lock file: '$lockFileValue'\n";
+        $this->repository = $locker->getLockedRepository();
     }
 
     /**
