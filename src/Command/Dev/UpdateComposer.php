@@ -126,6 +126,8 @@ class UpdateComposer extends Command
             json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
         );
 
+        $this->shell->execute('ls -la');
+
         $output->writeln('Run composer update');
         $this->shell->execute('composer update --ansi --no-interaction');
 
