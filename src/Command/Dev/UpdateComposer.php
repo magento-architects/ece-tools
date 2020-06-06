@@ -18,6 +18,7 @@ use Magento\MagentoCloud\Package\UndefinedPackageException;
 use Magento\MagentoCloud\Shell\ShellInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -28,6 +29,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 class UpdateComposer extends Command
 {
     public const NAME = 'dev:git:update-composer';
+    private const OPTION_NO_INSTALL = 'no-install';
+    const OPTION_IGNORE_PLATFORM_REQS = 'ignore-platform-reqs';
 
     /**
      * @var ComposerGenerator
@@ -92,6 +95,8 @@ class UpdateComposer extends Command
     {
         $this->setName(static::NAME)
             ->setDescription('Updates composer for deployment from git.');
+        $this->addOption(self::OPTION_NO_INSTALL, null, InputOption::VALUE_NONE, 'Do not run composer install/update');
+        $this->addOption(self::OPTION_IGNORE_PLATFORM_REQS, null, InputOption::VALUE_NONE, 'Run composer with --ignore-platform-reqs');
 
         parent::configure();
     }
@@ -126,10 +131,18 @@ class UpdateComposer extends Command
             json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
         );
 
-        $output->writeln('Run composer update');
-        $this->shell->execute('composer update --ansi --no-interaction');
-
-        $output->writeln('Composer update finished.');
-        $output->writeln('Please commit and push changed files.');
+        if ($input->getOption(self::OPTION_NO_INSTALL)) {
+            $output->writeln('Skipping composer update: "no-install" options is specified.');
+            $output->writeln('Please run "composer update" manually, then commit and push changed files.');
+        } else {
+            $output->writeln('Run composer update');
+            $composerCommand = 'composer update --ansi --no-interaction';
+            if ($input->getOption(self::OPTION_IGNORE_PLATFORM_REQS)) {
+                $composerCommand .= ' --ignore-platform-reqs';
+            }
+            $this->shell->execute($composerCommand);
+            $output->writeln('Composer update finished.');
+            $output->writeln('Please commit and push changed files.');
+        }
     }
 }
