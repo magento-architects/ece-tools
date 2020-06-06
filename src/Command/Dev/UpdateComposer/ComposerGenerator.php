@@ -136,17 +136,19 @@ class ComposerGenerator
     public function getInstallFromGitScripts(array $repoOptions): array
     {
         $installFromGitScripts = ['php -r"@mkdir(__DIR__ . \'/app/etc\', 0777, true);"'];
-        $installFromGitScripts[] = 'rm -rf ' . implode(' ', array_keys($repoOptions));
 
         foreach ($repoOptions as $repoName => $gitOption) {
+            $gitCommand = sprintf("git --git-dir=\"%s/.git\" --work-tree=\"%s\"", $repoName, $repoName);
             $gitRef = $gitOption['ref'] ?? $gitOption['branch'];
             $installFromGitScripts[] = sprintf(
-                'git clone %s "%s" && git --git-dir="%s/.git" --work-tree="%s" checkout %s',
+                "if [ ! -d %s ]; then git clone %s \"%s\"; else %s fetch origin; fi && %s checkout %s && %s pull",
+                $repoName,
                 $gitOption['repo'],
                 $repoName,
-                $repoName,
-                $repoName,
-                $gitRef
+                $gitCommand,
+                $gitCommand,
+                $gitRef,
+                $gitCommand
             );
         }
 
@@ -194,10 +196,7 @@ class ComposerGenerator
             ],
             'scripts' => [
                 'install-from-git' => $installFromGitScripts,
-                'pre-install-cmd' => [
-                    '@install-from-git',
-                ],
-                'pre-update-cmd' => [
+                'pre-dependencies-solving' => [
                     '@install-from-git',
                 ],
             ],
