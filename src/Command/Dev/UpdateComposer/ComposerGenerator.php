@@ -57,7 +57,7 @@ class ComposerGenerator
         DirectoryList $directoryList,
         MagentoVersion $magentoVersion,
         File $file,
-        $excludeRepoPathsPattern = ''
+        $excludeRepoPathsPattern = '/^((?!test|Test|dev).)*$/'
     ) {
         $this->directoryList = $directoryList;
         $this->magentoVersion = $magentoVersion;
@@ -117,7 +117,7 @@ class ComposerGenerator
                     ? ''
                     : "--exclude='" . join("' --exclude='", $repoPackages) . "' ";
                 $preparePackagesScripts[] = sprintf(
-                    "rsync -azhm --stats --link-dest=./ $excludeRepoStr--exclude='dev/tests' --exclude='.git' " .
+                    "rsync -azhm --stats --link-dest=./ $excludeRepoStr--exclude='.git' " .
                     "--exclude='composer.json' --exclude='composer.lock' ./%s/ ./",
                     $repoDir
                 );
