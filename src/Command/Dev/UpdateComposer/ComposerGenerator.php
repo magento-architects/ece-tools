@@ -103,13 +103,6 @@ class ComposerGenerator
 
             $repoPackages = $this->findPackages($baseRepoFolder);
             foreach ($repoPackages as $packageName => $packagePath) {
-                $composer['repositories'][$packageName] = [
-                    'type' => 'path',
-                    'url' => $repoDir . '/' . $packagePath,
-                    'options' => [
-                        'symlink' => true,
-                    ]
-                ];
                 $composer['require'][$packageName] = '*@dev';
             }
             if (!$isModuleRoot) {
@@ -176,6 +169,27 @@ class ComposerGenerator
                 'ce/bin/magento',
             ],
             'repositories' => [
+                'editions' => [
+                    'type' => 'path',
+                    'url' => '*/app/code/*/*',
+                    'options' => [
+                        'symlink' => true
+                    ]
+                ],
+                'single-modules' => [
+                    'type' => 'path',
+                    'url' => '*/*',
+                    'options' => [
+                        'symlink' => true
+                    ]
+                ],
+                'multiple-modules' => [
+                    'type' => 'path',
+                    'url' => '*',
+                    'options' => [
+                        'symlink' => true
+                    ]
+                ],
             ],
             'require' => [
             ],
